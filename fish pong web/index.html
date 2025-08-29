@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fish Pong – 굿즈 스토어</title>
+  <style>
+    :root {
+      --brand: #10b981; /* emerald */
+      --brand-ink: #0f172a; /* slate-900 */
+      --bg: #0b1020; /* deep navy */
+      --card: #12172a;
+      --muted: #93a3b8;
+      --ring: rgba(16,185,129,0.45);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 700px at 80% -10%, rgba(16,185,129,.08), transparent 60%),
+                  radial-gradient(900px 600px at 10% 20%, rgba(59,130,246,.08), transparent 60%),
+                  var(--bg);
+      color: #e5eaf1;
+      letter-spacing: .1px;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1200px, 92vw); margin: 0 auto; }
+
+    /* Header */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: saturate(140%) blur(10px);
+      background: rgba(11,16,32,.6);
+      border-bottom: 1px solid rgba(148,163,184,.12);
+    }
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0;
+    }
+    .brand {
+      display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px;
+      letter-spacing: .5px;
+    }
+    .brand img { width: 36px; height: 36px; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(16,185,129,.35)); }
+    .nav-cta { display: flex; gap: 8px; }
+    .btn {
+      padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(148,163,184,.2);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      color: #e6f4ef; cursor: pointer; font-weight: 600; transition: .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(148,163,184,.35); }
+    .btn.primary { border-color: rgba(16,185,129,.35); background: linear-gradient(180deg, rgba(16,185,129,.20), rgba(16,185,129,.10)); }
+
+    /* Hero */
+    .hero {
+      position: relative; overflow: hidden; border-radius: calc(var(--radius) + 6px);
+      margin: 22px 0 28px; box-shadow: var(--shadow);
+      isolation: isolate; border: 1px solid rgba(148,163,184,.18);
+    }
+    .hero video { width: 100%; height: clamp(280px, 48vw, 560px); object-fit: cover; display: block; filter: saturate(110%) contrast(102%) brightness(92%); }
+    .hero-overlay {
+      position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+      background: radial-gradient(800px 400px at 50% 60%, rgba(11,16,32,.2), rgba(11,16,32,.65));
+      padding: 24px;
+    }
+    .logo-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 14px; }
+    .logo {
+      width: clamp(120px, 18vw, 220px); height: auto; object-fit: contain;
+      filter: drop-shadow(0 10px 35px rgba(0,0,0,.5));
+    }
+    .tagline { font-size: clamp(18px, 2vw, 24px); color: #d7f7ec; opacity: .95; }
+
+    /* Controls */
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin: 10px 0 18px; }
+    .search { flex: 1 1 280px; position: relative; }
+    .search input {
+      width: 100%; padding: 12px 14px 12px 40px; border-radius: 12px; border: 1px solid rgba(148,163,184,.2);
+      background: #0f152b; color: #e6edf6; outline: none; transition: border .2s;
+    }
+    .search input:focus { border-color: var(--ring); box-shadow: 0 0 0 4px rgba(16,185,129,0.08); }
+    .search .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: .65; }
+
+    .filters { display: flex; gap: 10px; }
+    .select, .chip {
+      padding: 10px 12px; border-radius: 999px; border: 1px solid rgba(148,163,184,.2);
+      background: #0f152b; color: #e6edf6;
+    }
+    .chip.active { border-color: rgba(16,185,129,.45); background: rgba(16,185,129,.15); }
+
+    /* Grid */
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: repeat(8, 1fr); } }
+    @media (max-width: 640px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .card {
+      grid-column: span 3; /* 4 per row on desktop */
+      display: flex; flex-direction: column; gap: 10px; background: var(--card);
+      border: 1px solid rgba(148,163,184,.18); border-radius: var(--radius); overflow: hidden; position: relative;
+      box-shadow: var(--shadow); transition: transform .2s ease, box-shadow .2s ease;
+    }
+    @media (max-width: 900px) { .card { grid-column: span 4; } }
+    @media (max-width: 640px) { .card { grid-column: span 4; } }
+
+    .card:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(0,0,0,.45); }
+
+    .thumb { aspect-ratio: 1/1; width: 100%; object-fit: cover; background: #0a0f22; }
+    .info { padding: 12px 12px 2px; display: grid; gap: 8px; }
+    .title { font-weight: 700; letter-spacing: .2px; }
+    .meta { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 14px; }
+
+    .price { font-weight: 800; color: #eafbf4; }
+
+    .actions { display: flex; gap: 8px; padding: 0 12px 12px; }
+    .btn.add { flex: 1; background: linear-gradient(180deg, rgba(16,185,129,.18), rgba(16,185,129,.10)); border-color: rgba(16,185,129,.35); }
+    .btn.ghost { background: transparent; }
+
+    .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+
+    footer { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 0 60px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a href="#" class="brand">
+        <img src="assets/logo.png" alt="Fish Pong 로고" />
+        <span>Fish Pong</span>
+      </a>
+      <div class="nav-cta">
+        <button class="btn ghost" onclick="scrollToGrid()">굿즈 보기</button>
+        <button class="btn primary">장바구니 (0)</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO: 광고 영상 + 로고 오버레이 -->
+    <section class="hero" aria-label="Fish Pong 광고">
+      <!-- 교체: assets/hero.mp4 파일을 프로젝트에 추가하세요 -->
+      <video src="assets/hero.mp4" autoplay muted loop playsinline></video>
+      <div class="hero-overlay">
+        <div class="logo-wrap">
+          <!-- 교체: assets/logo-large.png  or 기존 logo.png 재사용 -->
+          <img class="logo" src="assets/logo.png" alt="Fish Pong" />
+          <div class="tagline">Paddle your style. Make a splash.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls: 검색 / 카테고리 / 정렬 -->
+    <section class="controls">
+      <div class="search">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/></svg>
+        <input id="q" type="search" placeholder="굿즈 검색 (예: 티셔츠, 키링)" oninput="render()" />
+      </div>
+      <div class="filters">
+        <select id="category" class="select" onchange="render()">
+          <option value="all">전체 카테고리</option>
+          <option value="apparel">의류</option>
+          <option value="accessory">액세서리</option>
+          <option value="home">리빙</option>
+        </select>
+        <select id="sort" class="select" onchange="render()">
+          <option value="new">신상품순</option>
+          <option value="low">가격 낮은순</option>
+          <option value="high">가격 높은순</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Product Grid -->
+    <section id="grid" class="grid" aria-live="polite"></section>
+    <div id="empty" class="empty" hidden>조건에 맞는 상품이 없어요.</div>
+
+    <footer>© <span id="year"></span> Fish Pong. All rights reserved.</footer>
+  </main>
+
+  <script>
+    // ====== 샘플 데이터 (이미지 경로와 정보만 바꾸면 됩니다) ======
+    const PRODUCTS = [
+      { id: 1, title: "Fish Pong 로고 티셔츠", category: "apparel", price: 29000, date: "2025-08-01", img: "assets/items/tshirt.jpg" },
+      { id: 2, title: "핑퐁 피쉬 볼 캡", category: "apparel", price: 24000, date: "2025-07-20", img: "assets/items/cap.jpg" },
+      { id: 3, title: "아크릴 키링 (네온)", category: "accessory", price: 9000, date: "2025-08-15", img: "assets/items/keyring.jpg" },
+      { id: 4, title: "금속 뱃지 세트", category: "accessory", price: 12000, date: "2025-06-11", img: "assets/items/badge.jpg" },
+      { id: 5, title: "머그컵 – Splash", category: "home", price: 15000, date: "2025-08-10", img: "assets/items/mug.jpg" },
+      { id: 6, title: "데스크 매트 – Wave", category: "home", price: 33000, date: "2025-05-25", img: "assets/items/deskmat.jpg" },
+      { id: 7, title: "후디 – Deep Sea", category: "apparel", price: 49000, date: "2025-08-21", img: "assets/items/hoodie.jpg" },
+      { id: 8, title: "스티커 팩 (12매)", category: "accessory", price: 5000, date: "2025-07-30", img: "assets/items/stickers.jpg" }
+    ];
+
+    const state = { q: "", category: "all", sort: "new" };
+
+    const gridEl = document.getElementById('grid');
+    const emptyEl = document.getElementById('empty');
+
+    function scrollToGrid(){
+      document.getElementById('grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function currency(krw){
+      return krw.toLocaleString('ko-KR') + '원';
+    }
+
+    function bySort(a, b){
+      if(state.sort === 'low') return a.price - b.price;
+      if(state.sort === 'high') return b.price - a.price;
+      // 신상품순: date 내림차순
+      return new Date(b.date) - new Date(a.date);
+    }
+
+    function match(p){
+      const qq = state.q.trim().toLowerCase();
+      const cat = state.category;
+      const okQ = !qq || p.title.toLowerCase().includes(qq);
+      const okC = cat === 'all' || p.category === cat;
+      return okQ && okC;
+    }
+
+    function render(){
+      state.q = document.getElementById('q').value;
+      state.category = document.getElementById('category').value;
+      state.sort = document.getElementById('sort').value;
+
+      const items = PRODUCTS.filter(match).sort(bySort);
+      gridEl.innerHTML = '';
+
+      if(items.length === 0){ emptyEl.hidden = false; return; } else { emptyEl.hidden = true; }
+
+      for(const p of items){
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.innerHTML = `
+          <img class="thumb" src="${p.img}" alt="${p.title}" onerror="this.src='data:image/svg+xml;utf8,${encodeURIComponent(placeholderSVG(p.title))}'"/>
+          <div class="info">
+            <div class="title">${p.title}</div>
+            <div class="meta">
+              <span class="category">${label(p.category)}</span>
+              <span class="price">${currency(p.price)}</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn add" onclick="alert('장바구니에 담겼습니다! (데모)')">담기</button>
+            <button class="btn ghost" onclick="alert('상세보기는 추후 연결하세요.')">상세</button>
+          </div>
+        `;
+        gridEl.appendChild(card);
+      }
+    }
+
+    function label(cat){
+      switch(cat){
+        case 'apparel': return '의류';
+        case 'accessory': return '액세서리';
+        case 'home': return '리빙';
+        default: return cat;
+      }
+    }
+
+    function placeholderSVG(text){
+      const bg = '#0a0f22';
+      const fg = encodeURIComponent('#a6b1c2');
+      const title = encodeURIComponent(text);
+      return `
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'>
+          <defs>
+            <linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
+              <stop offset='0%' stop-color='${bg}'/>
+              <stop offset='100%' stop-color='#0e1630'/>
+            </linearGradient>
+          </defs>
+          <rect width='600' height='600' fill='url(#g)'/>
+          <circle cx='480' cy='120' r='120' fill='rgba(16,185,129,0.18)'/>
+          <text x='50%' y='52%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='28' fill='${fg}' opacity='.92'>${title}</text>
+        </svg>`;
+    }
+
+    // init
+    document.getElementById('year').textContent = new Date().getFullYear();
+    render();
+  </script>  ...
+  <!-- 여기에 다른 script 태그들이 있을 수 있음 -->
+
+  <script>
+    // 주소가 /index.html/ 로 끝나면 슬래시 제거 후 리다이렉트
+    if (location.pathname.endsWith('/index.html/')) {
+      location.replace(location.pathname.slice(0, -1) + location.search + location.hash);
+    }
+  </script>
+</body>
+</html>
